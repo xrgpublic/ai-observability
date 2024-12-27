@@ -1,0 +1,167 @@
+openapi: 3.0.0
+info:
+  title: Bot Management API
+  version: 1.0.0
+  description: API for managing bots, checkpoints, sessions, metrics, and stacks
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+paths:
+  /api/bots:
+    get:
+      summary: List all bots
+      description: Retrieve a list of all bots
+      responses:
+        '200':
+          description: List of bots retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Bot'
+    post:
+      summary: Create a new bot
+      description: Create a new bot with the provided details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotCreate'
+      responses:
+        '201':
+          description: Bot created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Bot created
+                  id:
+                    type: integer
+                    example: 1
+        '400':
+          description: Invalid request data
+
+  /api/bots/{bot_id}:
+    parameters:
+      - name: bot_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID of the bot
+    get:
+      summary: Get bot details
+      description: Retrieve details of a specific bot
+      responses:
+        '200':
+          description: Bot details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Bot'
+        '404':
+          description: Bot not found
+    put:
+      summary: Update bot
+      description: Update details of a specific bot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BotCreate'
+      responses:
+        '200':
+          description: Bot updated successfully
+        '400':
+          description: Invalid request data
+        '404':
+          description: Bot not found
+    delete:
+      summary: Delete bot
+      description: Delete a specific bot
+      responses:
+        '200':
+          description: Bot deleted successfully
+        '404':
+          description: Bot not found
+
+  /api/bots/{bot_id}/checkpoints:
+    parameters:
+      - name: bot_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID of the bot
+
+  /api/bots/{bot_id}/sessions:
+    parameters:
+      - name: bot_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID of the bot
+
+  /api/stacks:
+    description: Endpoints for managing stacks
+
+  /api/bots/{bot_id}/metrics:
+    parameters:
+      - name: bot_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID of the bot
+
+components:
+  schemas:
+    Bot:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Assistant Bot"
+        description:
+          type: string
+          example: "A helpful assistant bot"
+        default_system_prompt:
+          type: string
+          example: "You are a helpful assistant"
+        orchestrator_bot:
+          type: boolean
+          example: false
+      required:
+        - name
+        - orchestrator_bot
+
+    BotCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Assistant Bot"
+        description:
+          type: string
+          example: "A helpful assistant bot"
+        default_system_prompt:
+          type: string
+          example: "You are a helpful assistant"
+        orchestrator_bot:
+          type: boolean
+          example: false
+      required:
+        - name
+        - orchestrator_bot
