@@ -48,7 +48,7 @@ export function CheckpointsDrawer({
         </Button>
       </div>
       <div className="p-4">
-        <ScrollArea className="min-h-[200px] max-h-[80vh] w-full rounded-md border p-4 dark:border-gray-700">
+        <ScrollArea className="min-h-[200px] max-h-[600px] overflow-y-auto w-full rounded-md border p-4 dark:border-gray-700">
           {checkpoints.length > 0 ? (
             checkpoints.map((checkpoint) => (
               <div
