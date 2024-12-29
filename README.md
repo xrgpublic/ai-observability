@@ -16,7 +16,7 @@ Follow these steps to set up the AI Observability App on your local machine:
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/xrgpublic/ai-observability.git
-cd ai-observability
+cd ai_observability
 ```
 
 ### 2. Run the Application with Docker Compose
@@ -92,6 +92,7 @@ The API is still in development, but the following endpoints are available for t
   ```
 
 ## Screenshot
+![frontend_example](https://github.com/user-attachments/assets/acd82630-b941-46dd-ba11-bbea111b9798)
 Refer to the provided screenshot for an example of the app’s interface, including the stack and agent search functionality.
 
 ## Troubleshooting
