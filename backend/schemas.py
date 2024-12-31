@@ -45,3 +45,11 @@ class SessionSchema(Schema):
     started_at = fields.Str(dump_only=True)
     ended_at = fields.Str(allow_none=True)
     messages = fields.Str()
+
+class ImageSchema(Schema):
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True)
+    image_path = fields.Str(required=True)
+    image_blob = fields.Raw(required=True)
+    
+

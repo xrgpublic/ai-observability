@@ -98,3 +98,10 @@ class Session:
             ended_at=row['ended_at'],
             messages=row['messages']
         )
+
+@dataclass
+class Image:
+    id: int
+    name: str
+    image_path: str
+    image_blob: bytes

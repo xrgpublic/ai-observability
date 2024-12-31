@@ -12,6 +12,8 @@ import { ContextWindowData } from "@/types"
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+const WORKSPACE_URL = "http://127.0.0.1:5000/api/v1";
+
 interface ContextTabProps {
   contextWindowData: ContextWindowData
   contextSummary: string | null
@@ -46,16 +48,58 @@ export function ContextTab({
               })}
             >
               <p className="text-sm font-semibold capitalize">{message.role}</p>
-              <p className="text-sm text-gray-800 "> <ReactMarkdown className="prose max-w-3xl break-words"
-        remarkPlugins={[remarkGfm]} 
-        children={message.content} 
-      /></p>
-            </div>
+              <p className="text-sm text-gray-800">
+                <ReactMarkdown className="prose max-w-3xl break-words"
+                  remarkPlugins={[remarkGfm]} 
+                  children={message.content} 
+                />
+              </p>
+              {/* Render Images if Present */}
+              {message.images && Array.isArray(message.images) && message.images.length > 0 && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {message.images.map((imgName: string) => {
+                  const [image, setImage] = React.useState<string | null>(null);
+                  React.useEffect(() => {
+                    async function fetchImage() {
+                      try {
+                        const fileName = imgName.split("/").pop() || "";
+                        const res = await fetch(`${WORKSPACE_URL}/images/${fileName}`);
+                        if (res.ok) {
+                          const blob = await res.blob();
+                          const url = URL.createObjectURL(blob);
+                          setImage(url);
+                        } else {
+                          console.error(`Failed to fetch image: ${res.statusText}`);
+                        }
+                      } catch (error) {
+                        console.error("Error fetching image:", error);
+                      }
+                    }
+                    fetchImage();
+                  }, [imgName]);
+                  return (
+                    <div key={imgName}>
+                      {image ? (
+                        <img
+                          src={image}
+                          alt={`Message image ${imgName}`}
+                          className="w-full h-auto rounded-md"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <p>Loading...</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
           </div>
         </div>
       ))}
     </>
-  )
+  );
 
   return (
     <Card className="bg-green-50/50 dark:bg-green-900/30 transition-colors">
