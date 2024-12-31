@@ -9,10 +9,10 @@ import { Flag, Brain, Edit, Save, Info, MessageSquare } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import classNames from "classnames"
 import { ContextWindowData } from "@/types"
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
-const WORKSPACE_URL = "http://127.0.0.1:5000/api/v1";
+const WORKSPACE_URL = "http://127.0.0.1:5000/api/v1"
 
 interface ContextTabProps {
   contextWindowData: ContextWindowData
@@ -31,9 +31,102 @@ export function ContextTab({
   setShowChainOfThought,
   editMode,
   handleEdit,
-  handleSave
+  handleSave,
 }: ContextTabProps) {
-  
+  // ---------------------------------------
+  // 1) Gather all messages that may contain images
+  //    (system prompt, datasets, memories, messages)
+  // ---------------------------------------
+  const getAllMessages = React.useCallback(() => {
+    const allMessages: any[] = []
+
+    // System prompt as one "message"
+    if (contextWindowData.system_prompt) {
+      allMessages.push({ role: "system", content: contextWindowData.system_prompt })
+    }
+
+    // Datasets
+    if (Array.isArray(contextWindowData.datasets)) {
+      contextWindowData.datasets.forEach((dataset) => {
+        if (Array.isArray(dataset.messages)) {
+          allMessages.push(...dataset.messages)
+        }
+      })
+    }
+
+    // Memories
+    if (Array.isArray(contextWindowData.memories)) {
+      contextWindowData.memories.forEach((memSet) => {
+        if (Array.isArray(memSet.messages)) {
+          allMessages.push(...memSet.messages)
+        }
+      })
+    }
+
+    // Regular messages
+    if (Array.isArray(contextWindowData.messages)) {
+      allMessages.push(...contextWindowData.messages)
+    }
+
+    return allMessages
+  }, [contextWindowData])
+
+  // ---------------------------------------
+  // 2) Top-level State for Storing Images
+  // ---------------------------------------
+  const [images, setImages] = React.useState<{ [key: string]: string | null }>({})
+
+  // ---------------------------------------
+  // 3) Single useEffect to Fetch Images 
+  //    whenever checkpoint (contextWindowData) changes
+  // ---------------------------------------
+  React.useEffect(() => {
+    let isMounted = true // to avoid setting state if unmounted
+
+    const fetchImages = async () => {
+      const newImages: { [key: string]: string | null } = {}
+      const allMessages = getAllMessages()
+
+      for (const msg of allMessages) {
+        if (Array.isArray(msg.images)) {
+          for (const imgName of msg.images) {
+            const fileName = imgName.split("/").pop() || ""
+            try {
+              const res = await fetch(`${WORKSPACE_URL}/images/${fileName}`)
+              if (res.ok) {
+                const blob = await res.blob()
+                newImages[imgName] = URL.createObjectURL(blob)
+              } else {
+                console.error(`Failed to fetch image ${fileName}: ${res.statusText}`)
+              }
+            } catch (error) {
+              console.error(`Error fetching image ${fileName}:`, error)
+            }
+          }
+        }
+      }
+
+      if (isMounted) {
+        setImages(newImages)
+      }
+    }
+
+    fetchImages()
+
+    // Cleanup: Revoke all old object URLs on unmount
+    return () => {
+      isMounted = false
+      Object.values(images).forEach((url) => {
+        if (url) {
+          URL.revokeObjectURL(url)
+        }
+      })
+    }
+  }, [getAllMessages])
+
+  // ---------------------------------------
+  // 4) Helper to Render Messages (with images)
+  // ---------------------------------------
   const renderMessages = (messages: any[], icon: React.ReactNode) => (
     <>
       {messages.map((message, index) => (
@@ -44,44 +137,25 @@ export function ContextTab({
               className={classNames("p-2 rounded-md", {
                 "bg-purple-100": message.role === "system",
                 "bg-green-100": message.role === "user",
-                "bg-blue-100": message.role === "assistant"
+                "bg-blue-100": message.role === "assistant",
               })}
             >
               <p className="text-sm font-semibold capitalize">{message.role}</p>
               <p className="text-sm text-gray-800">
-                <ReactMarkdown className="prose max-w-3xl break-words"
-                  remarkPlugins={[remarkGfm]} 
-                  children={message.content} 
+                <ReactMarkdown
+                  className="prose max-w-3xl break-words"
+                  remarkPlugins={[remarkGfm]}
+                  children={message.content}
                 />
               </p>
               {/* Render Images if Present */}
               {message.images && Array.isArray(message.images) && message.images.length > 0 && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {message.images.map((imgName: string) => {
-                  const [image, setImage] = React.useState<string | null>(null);
-                  React.useEffect(() => {
-                    async function fetchImage() {
-                      try {
-                        const fileName = imgName.split("/").pop() || "";
-                        const res = await fetch(`${WORKSPACE_URL}/images/${fileName}`);
-                        if (res.ok) {
-                          const blob = await res.blob();
-                          const url = URL.createObjectURL(blob);
-                          setImage(url);
-                        } else {
-                          console.error(`Failed to fetch image: ${res.statusText}`);
-                        }
-                      } catch (error) {
-                        console.error("Error fetching image:", error);
-                      }
-                    }
-                    fetchImage();
-                  }, [imgName]);
-                  return (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {message.images.map((imgName: string) => (
                     <div key={imgName}>
-                      {image ? (
+                      {images[imgName] ? (
                         <img
-                          src={image}
+                          src={images[imgName]!}
                           alt={`Message image ${imgName}`}
                           className="w-full h-auto rounded-md"
                           loading="lazy"
@@ -90,17 +164,19 @@ export function ContextTab({
                         <p>Loading...</p>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}
     </>
-  );
+  )
 
+  // ---------------------------------------
+  // 5) Render the Rest of the Original UI
+  // ---------------------------------------
   return (
     <Card className="bg-green-50/50 dark:bg-green-900/30 transition-colors">
       <CardHeader className="p-4 flex justify-between items-center">
@@ -150,6 +226,7 @@ export function ContextTab({
                 </Tooltip>
               </h3>
               {renderMessages(
+                // Our single "system" message
                 [{ role: "system", content: contextWindowData.system_prompt }],
                 <Flag className="h-4 w-4 mt-1 text-purple-500" />
               )}

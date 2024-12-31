@@ -172,32 +172,36 @@ export default function App() {
 
   // --- Checkpoint Handlers ---
   const handleSelectCheckpoint = (checkpointId: number) => {
-    // Your existing logic...
-    const newSelectedCheckpoint = checkpointId === selectedCheckpoint ? null : checkpointId;
-    setSelectedCheckpoint(newSelectedCheckpoint);
+    try{
+      // Your existing logic...
+      const newSelectedCheckpoint = checkpointId === selectedCheckpoint ? null : checkpointId;
+      setSelectedCheckpoint(newSelectedCheckpoint);
 
-    if (newSelectedCheckpoint && checkpoints.length > 0) {
-      const cp = checkpoints.find(c => c.id === newSelectedCheckpoint);
-      setBotInfo(prev => ({ ...prev, system_prompt: cp?.system_prompt || "", model: cp?.model || "" }));
+      if (newSelectedCheckpoint && checkpoints.length > 0) {
+        const cp = checkpoints.find(c => c.id === newSelectedCheckpoint);
+        setBotInfo(prev => ({ ...prev, system_prompt: cp?.system_prompt || "", model: cp?.model || "" }));
 
-      if (cp) {
+        if (cp) {
+          setContextWindowData({
+            system_prompt: cp.system_prompt,
+            datasets: cp.datasets ? JSON.parse(cp.datasets) : [],
+            memories: cp.memories ? JSON.parse(cp.memories) : [],
+            messages: cp.session_history ? JSON.parse(cp.session_history) : []
+          });
+        }
+      } else {
         setContextWindowData({
-          system_prompt: cp.system_prompt,
-          datasets: cp.datasets ? JSON.parse(cp.datasets) : [],
-          memories: cp.memories ? JSON.parse(cp.memories) : [],
-          messages: cp.session_history ? JSON.parse(cp.session_history) : []
+          system_prompt: "You are a helpful assistant.",
+          datasets: [],
+          memories: [],
+          messages: []
         });
       }
-    } else {
-      setContextWindowData({
-        system_prompt: "You are a helpful assistant.",
-        datasets: [],
-        memories: [],
-        messages: []
-      });
+      // simplified for brevity
+      setSelectedCheckpoint(checkpointId)
+    } catch (e) {
+      console.error("Checkpoint selection error:", e)
     }
-    // simplified for brevity
-    setSelectedCheckpoint(checkpointId)
   }
   const handleDeleteCheckpoint = async () => {
     // ...

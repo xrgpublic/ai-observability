@@ -1,4 +1,5 @@
 export interface Message {
+    images: boolean
     role: string
     content: string
   }
