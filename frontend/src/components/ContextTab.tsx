@@ -90,7 +90,7 @@ export function ContextTab({
       for (const msg of allMessages) {
         if (Array.isArray(msg.images)) {
           for (const imgName of msg.images) {
-            const fileName = imgName.split("/").pop() || ""
+            const fileName = imgName.split(/[\\/]/).pop() || ""
             try {
               const res = await fetch(`${WORKSPACE_URL}/images/${fileName}`)
               if (res.ok) {
