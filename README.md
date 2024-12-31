@@ -1,6 +1,8 @@
 # AI Observability App Extension with Modular Intelligence Library
 
-The **AI Observability App** is an extension for managing and visualizing your AI agents and stacks created with the `modular-intelligence` Python library. This app provides an intuitive interface to:
+#### NOTICE:<br>This app is still in developement. Currently, the frontend is just for database observability.  Outside of deleting checkpoints there are no create, update, or delete functionalities yet.
+---
+The **AI Observability App** is an extension for managing and visualizing your AI agents and stacks created with the [modular-intelligence](https://github.com/xrgpublic/modular-intelligence) Python library. This app provides an intuitive interface to:
 - View all agents you have created.
 - Manage stacks of agents and organize them into logical groupings.
 - Monitor session checkpoints for agents.
@@ -10,13 +12,17 @@ The **AI Observability App** is an extension for managing and visualizing your A
 - **Stack Management**: Organize agents into reusable stacks for different workflows.
 - **Session Tracking**: View and manage agent checkpoints for monitoring progress and activity.
 
+## Preview
+![frontend_example](https://github.com/user-attachments/assets/acd82630-b941-46dd-ba11-bbea111b9798)
+See the image above for an example of the app’s interface, including the stack and agent search functionality.
+
 ## Installation
 Follow these steps to set up the AI Observability App on your local machine:
 
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/xrgpublic/ai-observability.git
-cd ai-observability
+cd ai_observability
 ```
 
 ### 2. Run the Application with Docker Compose
@@ -44,7 +50,9 @@ http://localhost:5000
 - Checkpoints provide a history of agent interactions and session progress.
 
 ## API Usage
-The API is still in development, but the following endpoints are available for testing:
+The API is still in development, but these [endpoints](https://github.com/xrgpublic/ai-observability/blob/main/backend/api_documentation.yaml) are available for testing.
+
+Here is an example usage of the bots endpoint:
 
 - **Get all bots**:
   ```bash
@@ -90,9 +98,6 @@ The API is still in development, but the following endpoints are available for t
     "system_prompt": "You are a math tutor helping students understand mathematical concepts."
   }
   ```
-
-## Screenshot
-Refer to the provided screenshot for an example of the app’s interface, including the stack and agent search functionality.
 
 ## Troubleshooting
 If you encounter issues during setup, ensure:
