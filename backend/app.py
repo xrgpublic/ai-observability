@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from config import Config
-from routes import bots_bp, checkpoints_bp, stacks_bp, metrics_bp, sessions_bp, images_bp
+from routes import bots_bp, checkpoints_bp, stacks_bp, metrics_bp, sessions_bp, images_bp, python_ide_bp
 from database import init_db
 from werkzeug.exceptions import HTTPException
 import logging
@@ -35,6 +35,7 @@ def create_app(test_config=None):
     app.register_blueprint(metrics_bp, url_prefix='/api/v1/bots/<int:bot_id>')
     app.register_blueprint(sessions_bp, url_prefix='/api/v1/bots/<int:bot_id>/sessions')
     app.register_blueprint(images_bp, url_prefix='/api/v1/images')
+    app.register_blueprint(python_ide_bp, url_prefix='/api/v1/python-ide')
 
     # Error Handlers
     @app.errorhandler(HTTPException)

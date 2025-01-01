@@ -8,6 +8,7 @@ import {
   ListChecks,
   Moon,
   Sun,
+  Code,
 } from "lucide-react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ import { CheckpointsDrawer } from "@/components/CheckpointsDrawer"
 import { SearchPanel } from "@/components/SearchPanel"
 import { OverviewTab } from "@/components/OverviewTab"
 import { ContextTab } from "@/components/ContextTab"
+import { PythonIDE } from "@/components/PythonIDE"
 
 // -- Import shared types --
 import { BotInfo, Message, ContextWindowData, Checkpoint, Stack, Session } from "@/types"
@@ -354,10 +356,10 @@ export default function App() {
           />
         </div>
 
-        {/* -------- Right Column: Tabs (Overview, Context, Session) -------- */}
+        {/* -------- Right Column: Tabs (Overview, Context, Session, Python IDE) -------- */}
         <div className="md:col-span-9 space-y-6">
           <Tabs defaultValue="overview">
-            <TabsList className="grid grid-cols-3 w-full mb-4">
+            <TabsList className="grid grid-cols-4 w-full mb-4">
               <TabsTrigger value="overview">
                 <Flag className="h-4 w-4 mr-1" /> Overview
               </TabsTrigger>
@@ -366,6 +368,9 @@ export default function App() {
               </TabsTrigger>
               <TabsTrigger value="session">
                 <History className="h-4 w-4 mr-1" /> Session
+              </TabsTrigger>
+              <TabsTrigger value="python-ide">
+                <Code className="h-4 w-4 mr-1" /> Python IDE
               </TabsTrigger>
             </TabsList>
 
@@ -421,6 +426,11 @@ export default function App() {
                 </h2>
                 {/* Your session UI goes here */}
               </div>
+            </TabsContent>
+
+            {/* ------- Python IDE ------- */}
+            <TabsContent value="python-ide">
+              <PythonIDE />
             </TabsContent>
           </Tabs>
         </div>
