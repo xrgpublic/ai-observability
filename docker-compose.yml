@@ -17,9 +17,18 @@ services:
     networks:
       - mynetwork
     volumes:
-      - ${USERPROFILE}/.modular_intelligence/modular_intelligence.db:/root/.modular_intelligence/modular_intelligence.db
+      - ${USERPROFILE}/.modular_intelligence:/root/.modular_intelligence
     environment:
       - DATABASE=/root/.modular_intelligence/modular_intelligence.db
-      
+
+  qdrant:
+    image: qdrant/qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    networks:
+      - mynetwork
+
 networks:
   mynetwork:

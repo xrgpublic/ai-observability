@@ -3,3 +3,5 @@ pycache
 __pycache__
 dist
 dist-ssr
+.env
+qdrant_storage

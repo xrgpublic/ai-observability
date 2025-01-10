@@ -9,10 +9,10 @@ class Config:
     ENABLE_FOREIGN_KEYS = True
     SCHEMA_PATH = os.path.join(os.path.dirname(__file__), 'schema.sql')
     TABLES = {
-    'BOTS': 'Bots',
-    'CHECKPOINTS': 'Checkpoints',
-    'STACKS': 'Stacks',
-    'STACKSLOTS': 'StackSlots'
+        'BOTS': 'Bots',
+        'CHECKPOINTS': 'Checkpoints',
+        'STACKS': 'Stacks',
+        'STACKSLOTS': 'StackSlots'
     }
     QDRANT_COLLECTION_NAME = "assistant_memory"
     VECTOR_SIZE = 768

@@ -1,4 +1,5 @@
 export interface Message {
+    timestamp: any
     images: boolean
     role: string
     content: string

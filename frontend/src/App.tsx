@@ -20,10 +20,11 @@ import { SearchPanel } from "@/components/SearchPanel"
 import { OverviewTab } from "@/components/OverviewTab"
 import { ContextTab } from "@/components/ContextTab"
 import { PythonIDE } from "@/components/PythonIDE"
+import { ConversationPanel } from "@/components/ConversationPanel"
+import { SessionTab } from "./components/SessionTab"
 
 // -- Import shared types --
 import { BotInfo, Message, ContextWindowData, Checkpoint, Stack, Session } from "@/types"
-import { SessionTab } from "./components/SessionTab"
 
 // You can keep your utility functions and hooks within the same file, or create separate hooks:
 const WORKSPACE_URL = "http://127.0.0.1:5000/api/v1"
@@ -126,26 +127,6 @@ export default function App() {
   const handleSearch = (term: string) => {
     setSearchTerm(term)
   }
-  const startNewSession = async (botId: number) => {
-    try {
-      const response = await fetch(`${WORKSPACE_URL}/bots/${botId}/sessions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to start new session: ${response.status} ${errorText}`);
-      }
-      
-      const session = await response.json();
-      setCurrentSession(session);
-      return session;
-    } catch (error) {
-      console.error('Error starting new session:', error);
-      throw error;
-    }
-  };
 
   const filteredItems = React.useMemo(() => {
     if (searchType === "bot") {
@@ -256,7 +237,6 @@ export default function App() {
           memories: firstCheckpoint.memories ? JSON.parse(firstCheckpoint.memories) : [],
           messages: firstCheckpoint.session_history ? JSON.parse(firstCheckpoint.session_history) : []
         });
-        await startNewSession(botData.id);
       } else {
         setContextWindowData({
           system_prompt: "You are a helpful assistant.",
@@ -264,16 +244,15 @@ export default function App() {
           memories: [],
           messages: []
         });
-        await startNewSession(botData.id);
       }
 
-      const sessionHistoryResponse = await fetch(`${WORKSPACE_URL}/bots/${botData.id}/sessions/current`);
-      if (sessionHistoryResponse.ok) {
-        const sessionData = await sessionHistoryResponse.json();
-        setSessionHistory(sessionData);
-      } else {
-        setSessionHistory([]);
-      }
+      // const sessionHistoryResponse = await fetch(`${WORKSPACE_URL}/bots/${botData.id}/sessions/current`);
+      // if (sessionHistoryResponse.ok) {
+      //   const sessionData = await sessionHistoryResponse.json();
+      //   setSessionHistory(sessionData);
+      // } else {
+      //   setSessionHistory([]);
+      // }
 
     } catch (e) {
       console.error(e);
@@ -356,10 +335,10 @@ export default function App() {
           />
         </div>
 
-        {/* -------- Right Column: Tabs (Overview, Context, Session, Python IDE) -------- */}
+        {/* -------- Right Column: Tabs (Overview, Context, Session, Python IDE, Conversation) -------- */}
         <div className="md:col-span-9 space-y-6">
           <Tabs defaultValue="overview">
-            <TabsList className="grid grid-cols-4 w-full mb-4">
+            <TabsList className="grid grid-cols-5 w-full mb-4">
               <TabsTrigger value="overview">
                 <Flag className="h-4 w-4 mr-1" /> Overview
               </TabsTrigger>
@@ -371,6 +350,9 @@ export default function App() {
               </TabsTrigger>
               <TabsTrigger value="python-ide">
                 <Code className="h-4 w-4 mr-1" /> Python IDE
+              </TabsTrigger>
+              <TabsTrigger value="conversation">
+                <History className="h-4 w-4 mr-1" /> Conversation
               </TabsTrigger>
             </TabsList>
 
@@ -406,32 +388,125 @@ export default function App() {
               />
             </TabsContent>
 
-            {/* ------- Session (similar extraction) ------- */}
+            {/* TODO */}
+            {/* ------- Session (similar extraction) -------
             <TabsContent value="session">
               <SessionTab
-                isChatActive={isChatActive}
-                contextWindowData={contextWindowData}
-                currentMessage={currentMessage}
-                setCurrentMessage={setCurrentMessage}
-                handleSendMessage={handleSendMessage}
-                handleStartSession={handleStartSession}
-                handleEndSession={handleEndSession}
-              />
-              {/* You would similarly create a <SessionTab> component to handle the session/chat UI. */}
-              {/* For brevity, let's just inline it here or import from another file */}
-              <div className="bg-orange-50/50 dark:bg-orange-900/30 transition-colors p-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Session
-                </h2>
-                {/* Your session UI goes here */}
-              </div>
-            </TabsContent>
+                selectedBot={selectedBot}
+                selectedCheckpoint={selectedCheckpoint}
+                messages={contextWindowData.messages} 
+                onStartSession={async () => {
+                  if (!selectedBot?.id) return;
+                  try {
+                    const response = await fetch(`${WORKSPACE_URL}/sessions/bot/${selectedBot.id}/start`, {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      }
+                    });
+                    
+                    if (!response.ok) {
+                      throw new Error('Failed to start session');
+                    }
+                    
+                    console.log('Session started successfully');
+                  } catch (error) {
+                    console.error('Error starting session:', error);
+                  }
+                }}
+                onEndSession={async () => {
+                  if (!selectedBot?.id) return;
+                  try {
+                    const response = await fetch(`${WORKSPACE_URL}/sessions/bot/${selectedBot.id}/end`, {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      }
+                    });
+                    
+                    if (!response.ok) {
+                      throw new Error('Failed to end session');
+                    }
+                    
+                    // Clear the messages in the UI
+                    setContextWindowData(prev => ({
+                      ...prev,
+                      messages: []
+                    }));
+                    
+                    console.log('Session ended successfully');
+                  } catch (error) {
+                    console.error('Error ending session:', error);
+                  }
+                }}
+                onSendMessage={async (content: string) => {
+                  if (!selectedBot?.id) return;
+
+                  try {
+                    // Add user message to UI immediately
+                    setContextWindowData(prev => ({
+                      ...prev,
+                      messages: [...prev.messages, { role: "user", content, timestamp: new Date().toISOString(), images: false }]
+                    }));
+
+                    // Send message to backend
+                    const response = await fetch(`${WORKSPACE_URL}/sessions/bot/${selectedBot.id}/message`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        role: 'user',
+                        content
+                      })
+                    });
+
+                    const responseText = await response.text();
+                    
+                    if (!response.ok) {
+                      throw new Error(responseText || 'Failed to send message');
+                    }
+
+                    try {
+                      // Parse the response text as JSON
+                      const data = JSON.parse(responseText);
+                      // Update messages with the full conversation including bot's response
+                      setContextWindowData(prev => ({
+                        ...prev,
+                        messages: data
+                      }));
+                    } catch (parseError) {
+                      console.error('Error parsing response:', responseText);
+                      throw new Error('Invalid response format from server');
+                    }
+                  } catch (error) {
+                    console.error('Error sending message:', error);
+                    // TODO: Add error toast notification
+                    // Optionally remove the optimistically added message
+                    setContextWindowData(prev => ({
+                      ...prev,
+                      messages: prev.messages.slice(0, -1) // Remove last message
+                    }));
+                  }
+                }}
+              />            
+            </TabsContent> */}
 
             {/* ------- Python IDE ------- */}
             <TabsContent value="python-ide">
               <PythonIDE />
             </TabsContent>
+            
+            {/* TODO */}
+            {/* ------- Conversation -------
+            <TabsContent value="conversation">
+              <ConversationPanel 
+                onExecuteAction={(action) => {
+                  // Handle webpage modifications here
+                  console.log('Executing action:', action);
+                }}
+              />
+            </TabsContent> */}
           </Tabs>
         </div>
       </div>
